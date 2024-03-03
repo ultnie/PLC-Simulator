@@ -1,21 +1,19 @@
 import os
 import sys
 import time
+import json
 
 import poST_code
+import MuteTypes
 
 
 def main():
     sleepTime = 0
     program = poST_code.Program()
     path = sys.argv[1]
-    inputs = "\n".join("{!r}".format(k).replace("\'", "") for k in poST_code.inVars.keys()) + "\n"
     paused = False
     pauseTime = 0
     pauseStartTime = 0
-    with open(path + "/inputs", 'w') as f:
-        f.write(inputs)
-        f.close()
     while True:
         if not os.path.exists(path + "/flags"):
             with open(path + "/flags", "w") as fl:
@@ -62,24 +60,25 @@ def main():
                         pass
 
             program.run_iter()
-            in_text = "INPUTS:\n" + "\n".join(
-                "{!r}: {!r}".format(k, v).replace("\'", "") for k, v in poST_code.inVars.items())
-            out_text = "\n\nOUTPUTS:\n" + "\n".join(
-                "{!r}: {!r}".format(k, v).replace("\'", "") for k, v in poST_code.outVars.items())
-            states_text = "\n\nSTATES:\n" + "\n".join(
-                "{!r}: {!r}".format(k, v).replace("\'", "") for k, v in poST_code.pStates.items())
-            times_text = "\n\nTIMES:\n" + "\n".join(
-                "{!r}: {!r}".format(k, v).replace("\'", "") for k, v in poST_code.pTimes.items())
-            glob_text = "\n\nGLOBAL:\n" + "\n".join(
-                "{!r}: {!r}".format(k, v).replace("\'", "") for k, v in poST_code.globVars.items())
-            if os.path.exists(path + "/outputs"):
-                with open(path + "/outputs", 'r') as f:
-                    text = f.read()
-                    f.close()
-            if text != in_text + out_text + states_text + times_text + glob_text:
-                with open(path + "/outputs", 'w') as f:
-                    f.write(in_text + out_text + states_text + times_text + glob_text)
-                    f.close()
+
+            with open(path + "/inputs", 'w') as f:
+                json.dump(poST_code.inVars, f, cls=MuteTypes.MuteEncoder, indent=4)
+                f.close()
+            with open(path + "/input_outputs", 'w') as f:
+                json.dump(poST_code.inVars, f, cls=MuteTypes.MuteEncoder, indent=4)
+                f.close()
+            with open(path + "/output_outputs", 'w') as f:
+                json.dump(poST_code.outVars, f, cls=MuteTypes.MuteEncoder, indent=4)
+                f.close()
+            with open(path + "/states_outputs", 'w') as f:
+                json.dump(poST_code.pStates, f, indent=4)
+                f.close()
+            with open(path + "/times_outputs", 'w') as f:
+                json.dump(poST_code.pTimes, f, indent=4)
+                f.close()
+            with open(path + "/glob_outputs", 'w') as f:
+                json.dump(poST_code.globVars, f, cls=MuteTypes.MuteEncoder, indent=4)
+                f.close()
 
             iterFinishTime = time.process_time()
             if poST_code.taskTime is not None:

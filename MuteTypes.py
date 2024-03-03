@@ -1,3 +1,6 @@
+import json
+
+
 def get_value(obj):
     try:
         return obj.value[0]
@@ -9,6 +12,9 @@ class MuteNum:
     def __init__(self, value):
         # Mutable storage because `list` defines a location
         self.value = [value]
+
+    def __dict__(self):
+        return self.value[0].__dict__
 
     def __set__(self, value):
         self.value[0] = get_value(value)
@@ -139,6 +145,9 @@ class MuteBool:
     def __init__(self, value):
         self.value = [value]
 
+    def __dict__(self):
+        return self.value[0].__dict__
+
     def __set__(self, value):
         self.value[0] = get_value(value)
 
@@ -173,6 +182,9 @@ class MuteBool:
 class MuteStr:
     def __init__(self, value=""):
         self.value = [value]
+
+    def __dict__(self):
+        return self.value[0].__dict__
 
     def __set__(self, value):
         self.value[0] = get_value(value)
@@ -239,6 +251,9 @@ class MuteBytes:
     def __init__(self, value=b""):
         self.value = [value]
 
+    def __dict__(self):
+        return self.value[0].__dict__
+
     def __set__(self, value):
         self.value[0] = get_value(value)
 
@@ -295,3 +310,8 @@ class MuteBytes:
 
     def __repr__(self):
         return repr(self.value[0])
+
+
+class MuteEncoder(json.JSONEncoder):
+    def default(self, obj):
+        return get_value(obj)
