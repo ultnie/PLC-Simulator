@@ -64,21 +64,22 @@ def main():
             with open(path + "/inputs", 'w') as f:
                 json.dump(poST_code.inVars, f, cls=MuteTypes.MuteEncoder, indent=4)
                 f.close()
-            with open(path + "/input_outputs", 'w') as f:
-                json.dump(poST_code.inVars, f, cls=MuteTypes.MuteEncoder, indent=4)
-                f.close()
-            with open(path + "/output_outputs", 'w') as f:
+            with open(path + "/output", 'w') as f:
                 json.dump(poST_code.outVars, f, cls=MuteTypes.MuteEncoder, indent=4)
                 f.close()
-            with open(path + "/states_outputs", 'w') as f:
+            with open(path + "/states", 'w') as f:
                 json.dump(poST_code.pStates, f, indent=4)
                 f.close()
-            with open(path + "/times_outputs", 'w') as f:
+            with open(path + "/times", 'w') as f:
                 json.dump(poST_code.pTimes, f, indent=4)
                 f.close()
-            with open(path + "/glob_outputs", 'w') as f:
+            with open(path + "/glob_vars", 'w') as f:
                 json.dump(poST_code.globVars, f, cls=MuteTypes.MuteEncoder, indent=4)
                 f.close()
+            with open(path + "/vars", 'w') as f:
+                json.dump(poST_code.Vars, f, cls=MuteTypes.MuteEncoder, indent=4)
+                f.close()
+            # TODO: _g_p_times (или они уже в vars?)
 
             iterFinishTime = time.process_time()
             if poST_code.taskTime is not None:
