@@ -178,9 +178,6 @@ def control(program):
         except Exception as e:
             print(f"Failed to set value for {key}: {e}")
 
-    open(global_sim_in_path, "w").close();
-    open(sim_in_path, "w").close()
-
     program.run_iter()
 
     with open(path + "/inputs", 'w') as f:

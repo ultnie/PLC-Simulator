@@ -1,11 +1,12 @@
 import json
+from datetime import timedelta
 
 
 def get_value(obj):
     try:
         return obj.value[0]
     except:
-        return str(obj)
+        return obj
 
 
 class MuteNum:
@@ -314,4 +315,7 @@ class MuteBytes:
 
 class MuteEncoder(json.JSONEncoder):
     def default(self, obj):
-        return get_value(obj)
+        if not isinstance(obj, timedelta):
+            return get_value(obj)
+        else:
+            return str(obj)
