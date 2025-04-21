@@ -98,22 +98,22 @@ def plant(program):
     program.run_iter()
 
     with open(path + "/plant_inputs", 'w') as f:
-        json.dump(plant_code.inVars, f, cls=MuteTypes.MuteEncoder, indent=4, default=str)
+        json.dump(plant_code.inVars, f, cls=MuteTypes.MuteEncoder, indent=4)
         f.close()
     with open(path + "/plant_output", 'w') as f:
-        json.dump(plant_code.outVars, f, cls=MuteTypes.MuteEncoder, indent=4, default=str)
+        json.dump(plant_code.outVars, f, cls=MuteTypes.MuteEncoder, indent=4)
         f.close()
     with open(path + "/plant_states", 'w') as f:
-        json.dump(plant_code.pStates, f, indent=4, default=str)
+        json.dump(plant_code.pStates, f, indent=4)
         f.close()
     with open(path + "/plant_times", 'w') as f:
-        json.dump(plant_code.pTimes, f, indent=4, default=str)
+        json.dump(plant_code.pTimes, f, indent=4)
         f.close()
     with open(path + "/plant_glob_vars", 'w') as f:
-        json.dump(plant_code.globVars, f, cls=MuteTypes.MuteEncoder, indent=4, default=str)
+        json.dump(plant_code.globVars, f, cls=MuteTypes.MuteEncoder, indent=4)
         f.close()
     with open(path + "/plant_vars", 'w') as f:
-        json.dump(plant_code.Vars, f, cls=MuteTypes.MuteEncoder, indent=4, default=str)
+        json.dump(plant_code.Vars, f, cls=MuteTypes.MuteEncoder, indent=4)
         f.close()
     all_data = {
         "inputs": plant_code.inVars,
@@ -126,7 +126,7 @@ def plant(program):
 
     # Write the JSON to file using MuteEncoder
     with open(os.path.join(path, "plant_all"), 'w') as f:
-        json.dump(all_data, f, cls=MuteTypes.MuteEncoder, indent=4, default=str)
+        json.dump(all_data, f, cls=MuteTypes.MuteEncoder, indent=4)
         f.close()
 
 
@@ -184,29 +184,29 @@ def control(program):
     program.run_iter()
 
     with open(path + "/inputs", 'w') as f:
-        json.dump(poST_code.inVars, f, cls=MuteTypes.MuteEncoder, indent=4, default=str)
+        json.dump(poST_code.inVars, f, cls=MuteTypes.MuteEncoder, indent=4)
         f.close()
     with open(path + "/output", 'w') as f:
-        json.dump(poST_code.outVars, f, cls=MuteTypes.MuteEncoder, indent=4, default=str)
+        json.dump(poST_code.outVars, f, cls=MuteTypes.MuteEncoder, indent=4)
         f.close()
     with open(path + "/states", 'w') as f:
-        json.dump(poST_code.pStates, f, indent=4, default=str)
+        json.dump(poST_code.pStates, f, indent=4)
         f.close()
     with open(path + "/times", 'w') as f:
-        json.dump(poST_code.pTimes, f, indent=4, default=str)
+        json.dump(poST_code.pTimes, f, indent=4)
         f.close()
     with open(path + "/glob_vars", 'w') as f:
-        json.dump(poST_code.globVars, f, cls=MuteTypes.MuteEncoder, indent=4, default=str)
+        json.dump(poST_code.globVars, f, cls=MuteTypes.MuteEncoder, indent=4)
         f.close()
     with open(path + "/vars", 'w') as f:
-        json.dump(poST_code.Vars, f, cls=MuteTypes.MuteEncoder, indent=4, default=str)
+        json.dump(poST_code.Vars, f, cls=MuteTypes.MuteEncoder, indent=4)
         f.close()
     all_data = {"inputs": poST_code.inVars, "outputs": poST_code.outVars, "states": poST_code.pStates,
         "times": poST_code.pTimes, "global_vars": poST_code.globVars, "vars": poST_code.Vars}
 
     # Write the JSON to file using MuteEncoder
     with open(os.path.join(path, "all"), 'w') as f:
-        json.dump(all_data, f, cls=MuteTypes.MuteEncoder, indent=4, default=str)
+        json.dump(all_data, f, cls=MuteTypes.MuteEncoder, indent=4)
         f.close()
 
 

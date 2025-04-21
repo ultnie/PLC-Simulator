@@ -5,7 +5,7 @@ def get_value(obj):
     try:
         return obj.value[0]
     except:
-        return obj
+        return str(obj)
 
 
 class MuteNum:
