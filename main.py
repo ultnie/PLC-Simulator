@@ -34,14 +34,14 @@ def run():
             stopSim = False
         if pauseSim and not paused:
             paused = True
-            pauseStartTime = time.process_time()
+            pauseStartTime = time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW)//(10**6)
         elif not pauseSim and paused:
             paused = False
-            pauseFinishTime = time.process_time()
+            pauseFinishTime = time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW)//(10**6)
             pauseTime += pauseFinishTime - pauseStartTime
         elif not pauseSim:
-            iterStartTime = time.process_time()
-            startTime = time.process_time() + sleepTime - pauseTime
+            iterStartTime = time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW)//(10**6)
+            startTime = time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW)//(10**6) + sleepTime - pauseTime
             poST_code._global_time = startTime
             plant_code._global_time = startTime
 
@@ -57,14 +57,14 @@ def run():
                 poST_code.setVariable(k, v)
 
             #TODO: отображать время в миллисекундах или микросекундах
-            iterFinishTime = time.process_time()
+            iterFinishTime = time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW)//(10**6)
             if poST_code.taskTime is not None:
-                if (plant_code.taskTime.total_seconds() > 0):
-                    sleepStartTime = time.perf_counter()
-                    checkTime = plant_code.taskTime.total_seconds() - (iterFinishTime - iterStartTime)
+                if (plant_code.taskTime > 0):
+                    sleepStartTime = time.perf_counter_ns()//(10**6)
+                    checkTime = plant_code.taskTime - (iterFinishTime - iterStartTime)
                     if checkTime > 0:
                         time.sleep(checkTime)
-                    sleepEndTime = time.perf_counter()
+                    sleepEndTime = time.perf_counter_ns()//(10**6)
                     sleepTime += (sleepEndTime - sleepStartTime)
 
 
