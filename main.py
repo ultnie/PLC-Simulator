@@ -7,7 +7,6 @@ import MuteTypes
 import poST_code
 import plant_code
 
-sleepTime = 0
 paused = False
 stopSim = False
 pauseTime = 0
@@ -24,7 +23,7 @@ plant_program = plant_code.Program()
 
 
 def simulation_step():
-    global sleepTime, paused, stopSim, pauseTime, pauseStartTime, path, control_program, plant_program, scale, tCurrentScaled, tPrevScaled, tScaleChanged, poSTIterFinishTime, plantIterFinishTime
+    global paused, stopSim, pauseTime, pauseStartTime, path, control_program, plant_program, scale, tCurrentScaled, tPrevScaled, tScaleChanged, poSTIterFinishTime, plantIterFinishTime
 
     flags_path = os.path.join(path, "flags")
     if not os.path.exists(flags_path):
@@ -52,40 +51,28 @@ def simulation_step():
         pauseTime += pauseFinishTime - pauseStartTime
     elif not pauseSim or stepOnce:
         iterStartTime = int(((time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW) // (10 ** 6)) - tScaleChanged) * scale + tPrevScaled)
-        startTime = int(((time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW) // (10 ** 6)) - tScaleChanged) * scale + tPrevScaled) + sleepTime - pauseTime
-        poST_code._global_time = startTime
-        plant_code._global_time = startTime
+        startTime = iterStartTime - pauseTime
 
-        if poST_code.taskTime is not None and poST_code.taskTime > 0:
-            sleepStartTime = int(((time.perf_counter_ns() // (10**6)) - tScaleChanged) * scale + tPrevScaled)
-            checkTime = int(poST_code.taskTime / scale) - (iterStartTime - poSTIterFinishTime)
-            print(poST_code.taskTime)
-            print(checkTime)
-            if checkTime <= 0:
-                control(control_program)
-                for k, v in poST_code.globVars.items():
-                    plant_code.setVariable(k, v)
-                for k, v in poST_code.outVars.items():
-                    plant_code.setVariable(k, v)
-                poSTIterFinishTime = int(((time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW) // (10 ** 6)) - tScaleChanged) * scale + tPrevScaled)
-            sleepEndTime = int(((time.perf_counter_ns() // (10**6)) - tScaleChanged) * scale + tPrevScaled)
-            sleepTime += (sleepEndTime - sleepStartTime)
+        checkTime = int(poST_code.taskTime / scale) - (iterStartTime - poSTIterFinishTime)
+        if checkTime <= 0:
+            poST_code._global_time = startTime
+            control(control_program)
+            for k, v in poST_code.globVars.items():
+                plant_code.setVariable(k, v)
+            for k, v in poST_code.outVars.items():
+                plant_code.setVariable(k, v)
+            poSTIterFinishTime = int(((time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW) // (10 ** 6)) - tScaleChanged) * scale + tPrevScaled)
 
 
-        if plant_code.taskTime is not None and plant_code.taskTime > 0:
-            sleepStartTime = int(((time.perf_counter_ns() // (10**6)) - tScaleChanged) * scale + tPrevScaled)
-            checkTime = int(plant_code.taskTime / scale) - (iterStartTime - plantIterFinishTime)
-            print(plant_code.taskTime)
-            print(checkTime)
-            if checkTime <= 0:
-                plant(plant_program)
-                for k, v in plant_code.globVars.items():
-                    poST_code.setVariable(k, v)
-                for k, v in plant_code.outVars.items():
-                    poST_code.setVariable(k, v)
-                plantIterFinishTime = int(((time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW) // (10 ** 6)) - tScaleChanged) * scale + tPrevScaled)
-            sleepEndTime = int(((time.perf_counter_ns() // (10**6)) - tScaleChanged) * scale + tPrevScaled)
-            sleepTime += (sleepEndTime - sleepStartTime)
+        checkTime = int(plant_code.taskTime / scale) - (iterStartTime - plantIterFinishTime)
+        if checkTime <= 0:
+            plant_code._global_time = startTime
+            plant(plant_program)
+            for k, v in plant_code.globVars.items():
+                poST_code.setVariable(k, v)
+            for k, v in plant_code.outVars.items():
+                poST_code.setVariable(k, v)
+            plantIterFinishTime = int(((time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW) // (10 ** 6)) - tScaleChanged) * scale + tPrevScaled)
 
         # If stepOnce was used, clear it
         if stepOnce:
@@ -112,6 +99,7 @@ def run():
                 open(time_scale_path, "w").close()
         except FileNotFoundError:
             print("time_scale file does not exist")
+            open(time_scale_path, 'w').close()
 
         simulation_step()
 

@@ -1,5 +1,4 @@
 import json
-from datetime import timedelta
 
 
 def get_value(obj):
@@ -315,7 +314,4 @@ class MuteBytes:
 
 class MuteEncoder(json.JSONEncoder):
     def default(self, obj):
-        if not isinstance(obj, timedelta):
-            return get_value(obj)
-        else:
-            return str(obj)
+        return get_value(obj)
