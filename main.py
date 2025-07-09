@@ -1,9 +1,8 @@
 import os
 import sys
 import time
-import json
+from json_helpers import read_json_file, write_json_file, write_simulation_outputs
 
-import MuteTypes
 import poST_code
 import plant_code
 
@@ -53,25 +52,14 @@ def simulation_step():
         iterStartTime = int(((time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW) // (10 ** 6)) - tScaleChanged) * scale + tPrevScaled)
         startTime = iterStartTime - pauseTime
 
-        checkTime = int(poST_code.taskTime / scale) - (iterStartTime - poSTIterFinishTime)
-        if checkTime <= 0:
-            poST_code._global_time = startTime
-            control(control_program)
-            for k, v in poST_code.globVars.items():
-                plant_code.setVariable(k, v)
-            for k, v in poST_code.outVars.items():
-                plant_code.setVariable(k, v)
+        checkTime_control = int(poST_code.taskTime / scale) - (iterStartTime - poSTIterFinishTime)
+        if checkTime_control <= 0:
+            control(control_program, startTime)
             poSTIterFinishTime = int(((time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW) // (10 ** 6)) - tScaleChanged) * scale + tPrevScaled)
 
-
-        checkTime = int(plant_code.taskTime / scale) - (iterStartTime - plantIterFinishTime)
-        if checkTime <= 0:
-            plant_code._global_time = startTime
-            plant(plant_program)
-            for k, v in plant_code.globVars.items():
-                poST_code.setVariable(k, v)
-            for k, v in plant_code.outVars.items():
-                poST_code.setVariable(k, v)
+        checkTime_plant = int(plant_code.taskTime / scale) - (iterStartTime - plantIterFinishTime)
+        if checkTime_plant <= 0:
+            plant(plant_program, startTime)
             plantIterFinishTime = int(((time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW) // (10 ** 6)) - tScaleChanged) * scale + tPrevScaled)
 
         # If stepOnce was used, clear it
@@ -104,19 +92,14 @@ def run():
         simulation_step()
 
 
-def process_program(program, module, name_prefix, handle_global_vars=False):
+def process_program(program, module, other_module, name_prefix, start_time, handle_global_vars=False):
     global path, scale
+
+    module._global_time = start_time
 
     if handle_global_vars:
         global_sim_in_path = os.path.join(path, "global_sim_in")
-        if not os.path.exists(global_sim_in_path):
-            open(global_sim_in_path, "w").close()
-
-        with open(global_sim_in_path, "r") as f:
-            try:
-                global_sim_in = json.load(f)
-            except json.JSONDecodeError:
-                global_sim_in = {}
+        global_sim_in = read_json_file(global_sim_in_path)
 
         for key in module.globVars.keys():
             value = global_sim_in.get(key)
@@ -126,55 +109,38 @@ def process_program(program, module, name_prefix, handle_global_vars=False):
                 except Exception as e:
                     print(f"Failed to set global var {key}: {e}")
 
-        open(global_sim_in_path, "w").close()
+        for k, v in module.globVars.items():
+            other_module.setVariable(k, v)
 
-    sim_in_path = os.path.join(path, f"{name_prefix}_sim_in") if name_prefix else os.path.join(path, "sim_in")
-    if not os.path.exists(sim_in_path):
-        open(sim_in_path, "w").close()
+        write_json_file(global_sim_in_path, {})
 
-    with open(sim_in_path, "r") as f:
-        try:
-            sim_in = json.load(f)
-        except json.JSONDecodeError:
-            sim_in = {}
+    sim_in_path = os.path.join(path, f"{name_prefix}_sim_in")
+    sim_in = read_json_file(sim_in_path)
 
-    for key in module.inVars.keys():
+    for key in sim_in.keys():
         value = sim_in.get(key)
         if value is not None:
             try:
                 module.setVariable(key, value)
             except Exception as e:
                 print(f"Failed to set input var {key}: {e}")
-    open(sim_in_path, "w").close()
+
+    write_json_file(sim_in_path, {})
 
     program.run_iter()
 
-    all_data = {
-        "scale": scale,
-        "inputs": module.inVars,
-        "outputs": module.outVars,
-        "states": module.pStates,
-        "times": module.pTimes,
-        "global_vars": module.globVars,
-        "vars": module.Vars
-    }
+    write_simulation_outputs(path, name_prefix, module, scale)
 
-    for fname, data in all_data.items():
-        suffix = f"{name_prefix}_{fname}" if name_prefix else fname
-        with open(os.path.join(path, suffix), 'w') as f:
-            json.dump(data, f, cls=MuteTypes.MuteEncoder, indent=4)
-
-    all_file = os.path.join(path, f"{name_prefix}_all" if name_prefix else "all")
-    with open(all_file, 'w') as f:
-        json.dump(all_data, f, cls=MuteTypes.MuteEncoder, indent=4)
+    for k, v in module.outVars.items():
+        other_module.setVariable(k, v)
 
 
-def control(program):
-    process_program(program, poST_code, name_prefix="", handle_global_vars=True)
+def control(program, start_time):
+    process_program(program, poST_code, plant_code, "control",  start_time, handle_global_vars=False)
 
 
-def plant(program):
-    process_program(program, plant_code, name_prefix="plant", handle_global_vars=False)
+def plant(program, start_time):
+    process_program(program, plant_code, poST_code, "plant", start_time, handle_global_vars=True)
 
 
 if __name__ == '__main__':
