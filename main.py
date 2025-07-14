@@ -92,7 +92,7 @@ def run():
         simulation_step()
 
 
-def process_program(program, module, other_module, name_prefix, start_time, handle_global_vars=False):
+def process_program(program, module, other_module, name_prefix, other_name_prefix, start_time, handle_global_vars=False):
     global path, scale
 
     module._global_time = start_time
@@ -106,6 +106,7 @@ def process_program(program, module, other_module, name_prefix, start_time, hand
             if value is not None:
                 try:
                     module.setVariable(key, value)
+                    other_module.setVariable(key, value)
                 except Exception as e:
                     print(f"Failed to set global var {key}: {e}")
 
@@ -116,6 +117,8 @@ def process_program(program, module, other_module, name_prefix, start_time, hand
 
     sim_in_path = os.path.join(path, f"{name_prefix}_sim_in")
     sim_in = read_json_file(sim_in_path)
+    other_sim_in_path = os.path.join(path, f"{other_name_prefix}_sim_in")
+    other_sim_in = read_json_file(other_sim_in_path)
 
     for key in sim_in.keys():
         value = sim_in.get(key)
@@ -123,9 +126,26 @@ def process_program(program, module, other_module, name_prefix, start_time, hand
             try:
                 module.setVariable(key, value)
             except Exception as e:
-                print(f"Failed to set input var {key}: {e}")
+                print(f"Failed to set input var {key} into {name_prefix}: {e}")
+            try:
+                other_module.setVariable(key, value)
+            except Exception as e:
+                print(f"Failed to set input var {key} into {other_name_prefix}: {e}")
+
+    for key in other_sim_in.keys():
+        value = other_sim_in.get(key)
+        if value is not None:
+            try:
+                other_module.setVariable(key, value)
+            except Exception as e:
+                print(f"Failed to set input var {key} into {other_name_prefix}: {e}")
+            try:
+                module.setVariable(key, value)
+            except Exception as e:
+                print(f"Failed to set input var {key} into {name_prefix}: {e}")
 
     write_json_file(sim_in_path, {})
+    write_json_file(other_sim_in_path, {})
 
     program.run_iter()
 
@@ -136,11 +156,11 @@ def process_program(program, module, other_module, name_prefix, start_time, hand
 
 
 def control(program, start_time):
-    process_program(program, poST_code, plant_code, "control",  start_time, handle_global_vars=False)
+    process_program(program, poST_code, plant_code, "control", "plant", start_time, handle_global_vars=False)
 
 
 def plant(program, start_time):
-    process_program(program, plant_code, poST_code, "plant", start_time, handle_global_vars=True)
+    process_program(program, plant_code, poST_code, "plant", "control", start_time, handle_global_vars=True)
 
 
 if __name__ == '__main__':
